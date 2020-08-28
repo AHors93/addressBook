@@ -2,83 +2,78 @@ import React from 'react';
 import './App.css';
 import BookItems from './BookItems/BookItems'
 
+
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: [],
-      currentItem: {
-        text: '',
-        key: ''
-      }
+      name: '',
+      email: '',
+      number: null,
+      list: []
     }
-    this.addItem = this.addItem.bind(this);
-    this.handleInput = this.handleInput.bind(this);
-    this.deleteItem = this.deleteItem.bind(this);
-    this.setUpdate = this.setUpdate.bind(this);
   }
-  addItem(e) {
+
+  handleName = (e) => {
+    this.setState({
+      name: e.target.value,
+    })
+  }
+  handleEmail = (e) => {
+    this.setState({
+      email: e.target.value,
+    })
+  }
+  handleNumber = (e) => {
+    this.setState({
+      number: e.target.value,
+    })
+  }
+
+  addUsers = async (e) => {
     e.preventDefault();
-    const newItem = this.state.currentItem;
-    if (newItem.text !== "") {
-      const items = [...this.state.items, newItem];
-      this.setState({
-        items: items,
-        currentItem: {
-          text: '',
-          key: ''
-        }
+    const response = await fetch('http://localhost:7000/addressbook/v1/address', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: this.state.name,
+        email: this.state.email,
+        number: this.state.number
       })
-    }
-  }
-  handleInput(e) {
-    this.setState({
-      currentItem: {
-        text: e.target.value,
-        key: Date.now()
-      }
     })
-  }
-  deleteItem(key) {
-    const filteredItems = this.state.items.filter(item =>
-      item.key !== key);
-    this.setState({
-      items: filteredItems
-    })
+    const data = await response.json();
+    console.log(data);
+  };
 
-  }
-  setUpdate(text, key) {
-    console.log("items:" + this.state.items);
-    const items = this.state.items;
-    items.map(item => {
-      if (item.key === key) {
-        console.log(item.key + "    " + key)
-        item.text = text;
-      }
-    })
-    this.setState({
-      items: items
-    })
+  componentDidMount = async () => {
+    await fetch('http://localhost:7000/addressbook/v1/users')
+      .then(response => response.json())
+      .then(data => this.setState({ list: data.data }));
+  };
 
 
-  }
   render() {
     return (
       <div className="App">
         <header>
-          <form id="to-do-form" onSubmit={this.addItem}>
-            <input type="text" placeholder="Enter details" value={this.state.currentItem.text} onChange={this.handleInput}></input>
-            <button type="submit" id='btn'>Add</button>
+          <form id="to-do-form" onSubmit={this.addItem} method='POST'>
+            <input type="text" placeholder="Enter name" onChange={this.handleName}></input>
+            <input type="text" placeholder="Enter email" onChange={this.handleEmail}></input>
+            <input type="text" placeholder="Enter number" onChange={this.handleNumber}></input>
+            <button type="submit" id='btn' onClick={this.addUsers}>Add</button>
           </form>
-          <p>{this.state.items.text}</p>
 
-          <BookItems items={this.state.items} deleteItem={this.deleteItem} setUpdate={this.setUpdate} />
-
+          {/* <BookItems items={this.state.items} deleteItem={this.deleteItem} setUpdate={this.setUpdate} /> */}
+          <div>
+            {this.state.list.map(item => {
+              return <li>{item.name}, {item.email}, {item.number}</li>
+            })}
+          </div>
         </header>
       </div>
     );
   }
-}
+};
 
 
 export default App;
